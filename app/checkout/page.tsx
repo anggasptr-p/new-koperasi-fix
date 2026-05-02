@@ -4,12 +4,13 @@ import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  // Tarik data keranjang dari Brankas Global!
-  const { cart, totalItems, totalPrice } = useCartStore((state) => ({
-    cart: state.cart,
-    totalItems: state.cart.reduce((sum, item) => sum + item.qty, 0),
-    totalPrice: state.cart.reduce((sum, item) => sum + item.price * item.qty, 0),
-  }));
+  // INI KODINGAN BENERNYA LER
+  const cart = useCartStore((state) => state.cart);
+  
+  // Ngitungnya di luar Zustand biar React ga panik
+  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+
 
   if (cart.length === 0) {
     return (
