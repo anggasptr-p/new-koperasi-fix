@@ -1,4 +1,5 @@
-import "@/app/globals.css";
+// @ts-ignore
+import "./globals.css";
 
 
 export const metadata = {
