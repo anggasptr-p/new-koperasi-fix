@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
-import { Lock, Mail, User, IdentificationCard, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
+import { Lock, Mail, User, IdCard, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 export default function RegisterPage() {
@@ -94,7 +94,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">NIS (Nomor Induk Siswa)</label>
               <div className="relative group">
-                <IdentificationCard className="absolute left-4 top-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                <IdCard className="absolute left-4 top-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={18} />
                 <input type="text" placeholder="Masukin NIS lu, Bro" className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-emerald-500/20 focus:ring-0 transition-all outline-none font-semibold text-slate-800" onChange={e => setNis(e.target.value)} required />
               </div>
             </div>
