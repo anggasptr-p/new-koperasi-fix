@@ -1,122 +1,87 @@
 "use client";
 import { useState } from "react";
+import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
-import { supabase } from "../../lib/supabase"; // <-- Kabel Supabase lu!
+import { Lock, Mail, ArrowRight, Sparkles, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const [nis, setNis] = useState("");
-  const [pin, setPin] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Validasi Anti-Mabok (Wajib 5 Digit)
-    if (nis.length !== 5 || pin.length !== 5) {
-      alert("Ler, NIS ama PIN lu kan 5 digit, cek lagi gih!");
-      return;
-    }
-
-    setIsLoading(true);
-
-    // Logika Siluman (Harus sama persis sama yang di Register)
-    const dummyEmail = `${nis}@smaneka.com`;
-    const securePassword = `${pin}_KopSmnk26!`;
-
-    try {
-      // PROSES LOGIN KE SUPABASE 🚀
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: dummyEmail,
-        password: securePassword,
-      });
-
-      // Kalau salah password atau akun belum ada
-      if (error) {
-        throw error;
-      }
-
-      // Kalau sukses masuk
-      alert(`Welcome back, Bro! Login sukses.`);
-      window.location.href = "/"; // <-- GANTI JADI INI LER
-
-
-    } catch (error: any) {
-      console.error("Error Login:", error.message);
-      // Pesen error yang lebih "Manusiawi"
-      if (error.message.includes("Invalid login credentials")) {
-         alert("NIS atau PIN lu salah anjir! Ingat-ingat lagi Ler.");
-      } else {
-         alert(`Gagal login! Error: ${error.message}`);
-      }
-    } finally {
-      setIsLoading(false);
-    }
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) alert(error.message);
+    else router.push("/");
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-white px-8 flex flex-col justify-center max-w-md mx-auto relative">
-      
-      <a href="/" className="absolute top-8 left-8 text-gray-300 hover:text-gray-500 text-2xl font-bold transition-colors">←</a>
-
-      <div className="mb-12 mt-10">
-        <h1 className="text-4xl font-black text-gray-900 leading-tight">
-          Selamat<br/><span className="text-green-600">Datang!</span>
-        </h1>
-        <p className="text-gray-400 font-medium mt-3 text-sm italic">
-          Koperasi Smaneka Digital Management
-        </p>
-      </div>
-
-      <form className="space-y-6" onSubmit={handleLogin}>
-        <div>
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Username / NIS</label>
-          <input 
-            type="text" 
-            inputMode="numeric"
-            maxLength={5}
-            required
-            value={nis}
-            onChange={(e) => setNis(e.target.value.replace(/[^0-9]/g, ''))}
-            placeholder="Masukin 5 digit NIS lu" 
-            className="w-full mt-2 bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 px-6 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all font-bold text-gray-700 tracking-wider"
-          />
+    <div className="min-h-screen bg-white flex font-sans">
+      {/* Left Side: Illustration & Branding */}
+      <div className="hidden lg:flex lg:w-1/2 bg-slate-950 p-16 flex-col justify-between relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent"></div>
+        <div className="relative z-10">
+           <h1 className="text-3xl font-black text-white tracking-tighter italic">SMANEKA<span className="text-emerald-500">.</span></h1>
         </div>
-
-        <div>
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">PIN Keamanan</label>
-          <input 
-            type="password" 
-            inputMode="numeric"
-            maxLength={5}
-            required
-            value={pin}
-            onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))}
-            placeholder="•••••" 
-            className="w-full mt-2 bg-gray-50 border-2 border-gray-100 rounded-2xl py-4 px-6 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all font-bold text-gray-700 tracking-[1em]"
-          />
+        <div className="relative z-10">
+          <h2 className="text-5xl font-black text-white leading-tight mb-6">Experience the <br/><span className="text-emerald-500">New Standard</span> of <br/>School Cooperative.</h2>
+          <div className="space-y-4">
+             {[ "Seamless Digital Payment", "Kop-Point Reward System", "Verified Merchant Safety"].map((text, i) => (
+               <div key={i} className="flex items-center gap-3 text-slate-400 font-medium">
+                 <CheckCircle2 className="text-emerald-500" size={20} /> {text}
+               </div>
+             ))}
+          </div>
         </div>
-
-        <button 
-          type="submit" 
-          disabled={isLoading}
-          className="w-full bg-green-600 text-white py-5 rounded-[22px] font-black uppercase tracking-[0.2em] shadow-xl shadow-green-100 active:scale-[0.97] transition-all mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {isLoading ? "BENTAR LER..." : "MASUK SEKARANG"}
-        </button>
-      </form>
-
-      <div className="mt-12 text-center border-t border-gray-50 pt-8">
-        <p className="text-xs text-gray-400 font-bold mb-2">Belum punya akun Koperasi?</p>
-        <a href="/register" className="inline-block text-sm font-black text-green-600 border-2 border-green-600 px-8 py-3 rounded-full hover:bg-green-600 hover:text-white transition-all active:scale-95 shadow-sm">
-          DAFTAR AKUN BARU 🚀
-        </a>
+        <p className="text-slate-500 text-sm font-medium">© 2024 Smaneka Digital Ecosystem. Built for Excellence.</p>
       </div>
 
-      <div className="mt-10 text-center opacity-30">
-        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Built with passion by Ardi</p>
-      </div>
+      {/* Right Side: Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16">
+        <div className="w-full max-w-md">
+          <div className="mb-10">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full mb-4 text-[10px] font-black uppercase tracking-widest">
+              <Sparkles size={12} /> Secure Access
+            </div>
+            <h3 className="text-3xl font-black text-slate-950 tracking-tight mb-2">Welcome Back.</h3>
+            <p className="text-slate-500 text-sm font-medium">Enter your credentials to access your cooperative account.</p>
+          </div>
 
+          <form onSubmit={handleLogin} className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-xs font-black uppercase tracking-widest text-slate-400 ml-1">Email Address</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                <input type="email" placeholder="nama@sman1kepanjen.sch.id" className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-emerald-500/20 focus:ring-0 transition-all outline-none font-semibold" onChange={e => setEmail(e.target.value)} required />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex justify-between items-center px-1">
+                <label className="text-xs font-black uppercase tracking-widest text-slate-400">Password</label>
+                <a href="#" className="text-[10px] font-bold text-emerald-600 hover:underline">Forgot?</a>
+              </div>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={20} />
+                <input type="password" placeholder="••••••••" className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-emerald-500/20 focus:ring-0 transition-all outline-none font-semibold" onChange={e => setPassword(e.target.value)} required />
+              </div>
+            </div>
+
+            <button type="submit" disabled={loading} className="w-full bg-slate-950 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all active:scale-[0.98] shadow-xl shadow-slate-200">
+              {loading ? "Authenticating..." : "Sign In Account"} <ArrowRight size={16} />
+            </button>
+          </form>
+
+          <p className="mt-8 text-center text-sm text-slate-500 font-medium">
+            Don't have an account? <Link href="/register" className="text-emerald-600 font-bold hover:underline">Create for free</Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

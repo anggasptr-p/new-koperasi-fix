@@ -1,99 +1,131 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation"; 
-import { supabase } from "../../lib/supabase"; // <-- Manggil kabel Supabase lu!
+import { supabase } from "../../lib/supabase";
+import { useRouter } from "next/navigation";
+import { Lock, Mail, User, IdentificationCard, ArrowRight, Sparkles, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 
 export default function RegisterPage() {
-  const router = useRouter(); // Buat pindah halaman otomatis
-  const [nama, setNama] = useState("");
+  const [fullName, setFullName] = useState("");
   const [nis, setNis] = useState("");
-  const [pin, setPin] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // Biar tombol loading pas diteken
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
 
-    // Validasi Anti-Orang-Mabok
-    if (nis.length !== 5 || pin.length !== 5) {
-      alert("Woi anjir! NIS sama PIN lu harus pas 5 digit!");
-      return;
+    // Proses SignUp ke Supabase dengan Metadata (Nama & NIS)
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          nis: nis,
+        },
+      },
+    });
+
+    if (error) {
+      alert("Waduh, gagal daftar Bro: " + error.message);
+    } else {
+      alert("Mantap! Cek email buat verifikasi, terus langsung login Ler!");
+      router.push("/login");
     }
-
-    if (nis !== pin) {
-      alert("Ler, NIS sama PIN lu beda tuh. Samain aja biar ga lupa!");
-      return;
-    }
-
-    setIsLoading(true); // Nyalain efek loading
-
-    // Logika Siluman
-    const dummyEmail = `${nis}@smaneka.com`;
-    const securePassword = `${pin}_KopSmnk26!`;
-
-    try {
-      // PROSES NEMBAK KE SUPABASE AUTH 🚀
-      const { data, error } = await supabase.auth.signUp({
-        email: dummyEmail,
-        password: securePassword,
-        options: {
-          data: {
-            full_name: nama, // Simpen nama aslinya ke metadata
-            nis: nis // Simpen juga NIS-nya buat jaga-jaga
-          }
-        }
-      });
-
-      // Kalau error (misal NIS udah pernah didaftarin)
-      if (error) throw error;
-
-      // Kalau sukses
-      alert(`Mantap jiwa! Akun ${nama} berhasil dibikin. Gas login sekarang, Bro!`);
-      router.push('/login'); // Otomatis pindah ke halaman login
-      
-    } catch (error: any) {
-      console.error("Error dari Supabase:", error.message);
-      alert(`Gagal bikin akun, Ler! Error: ${error.message}`);
-    } finally {
-      setIsLoading(false); // Matiin efek loading
-    }
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-white px-8 flex flex-col justify-center max-w-md mx-auto relative">
-      <a href="/login" className="absolute top-8 left-8 text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors">←</a>
-
-      <div className="mb-10 mt-12">
-        <h1 className="text-4xl font-black text-gray-900 leading-tight">Bikin<br/><span className="text-green-600">Akun Baru!</span></h1>
-        <p className="text-gray-400 font-medium mt-3 text-sm">Daftar pake NIS lu. Gampang, ga pake ribet.</p>
+    <div className="min-h-screen bg-white flex font-sans">
+      {/* Kanan: Branding & Info (Hidden di HP) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-slate-950 p-16 flex-col justify-between relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent"></div>
+        <div className="relative z-10">
+           <h1 className="text-3xl font-black text-white tracking-tighter italic">SMANEKA<span className="text-emerald-500">.</span></h1>
+        </div>
+        <div className="relative z-10">
+          <h2 className="text-5xl font-black text-white leading-tight mb-8">Join the <br/><span className="text-emerald-500">Elite Circle</span> of <br/>Smaneka Students.</h2>
+          <div className="space-y-6">
+             {[ 
+               { title: "Smart Inventory", desc: "Akses jajan paling lengkap & update." },
+               { title: "Priority Queue", desc: "Gak perlu antre, tinggal scan & ambil." },
+               { title: "Kop-Point Plus", desc: "Dapet cashback poin tiap transaksi." }
+             ].map((item, i) => (
+               <div key={i} className="flex gap-4">
+                 <div className="mt-1 bg-emerald-500/20 p-2 rounded-lg text-emerald-500 h-fit">
+                    <ShieldCheck size={20} />
+                 </div>
+                 <div>
+                    <h4 className="text-white font-bold text-lg leading-none mb-1">{item.title}</h4>
+                    <p className="text-slate-400 text-sm font-medium">{item.desc}</p>
+                 </div>
+               </div>
+             ))}
+          </div>
+        </div>
+        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Built for SMAN 1 Kepanjen Digital Era.</p>
       </div>
 
-      <form className="space-y-5" onSubmit={handleRegister}>
-        {/* Input Nama */}
-        <div>
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Nama Lengkap</label>
-          <input type="text" required value={nama} onChange={(e) => setNama(e.target.value)} placeholder="Contoh: Ardiansyah Emir" className="w-full mt-2 bg-gray-50 border-2 border-gray-100 rounded-2xl py-3.5 px-5 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all font-bold text-gray-700"/>
+      {/* Kiri: Form Registrasi */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 md:p-16 bg-slate-50 lg:bg-white">
+        <div className="w-full max-w-md bg-white p-10 lg:p-0 rounded-[2.5rem] shadow-2xl shadow-slate-200 lg:shadow-none">
+          <div className="mb-10 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full mb-4 text-[10px] font-black uppercase tracking-widest">
+              <Sparkles size={12} /> Membership Program
+            </div>
+            <h3 className="text-3xl font-black text-slate-950 tracking-tight mb-2">Create Account.</h3>
+            <p className="text-slate-500 text-sm font-medium">Lengkapi data lu biar resmi jadi member koperasi digital.</p>
+          </div>
+
+          <form onSubmit={handleRegister} className="space-y-5">
+            {/* Input Full Name */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Nama Lengkap</label>
+              <div className="relative group">
+                <User className="absolute left-4 top-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                <input type="text" placeholder="Contoh: Ardhiansyah Emir" className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-emerald-500/20 focus:ring-0 transition-all outline-none font-semibold text-slate-800" onChange={e => setFullName(e.target.value)} required />
+              </div>
+            </div>
+
+            {/* Input NIS */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">NIS (Nomor Induk Siswa)</label>
+              <div className="relative group">
+                <IdentificationCard className="absolute left-4 top-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                <input type="text" placeholder="Masukin NIS lu, Bro" className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-emerald-500/20 focus:ring-0 transition-all outline-none font-semibold text-slate-800" onChange={e => setNis(e.target.value)} required />
+              </div>
+            </div>
+
+            {/* Input Email */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Sekolah / Personal</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                <input type="email" placeholder="nama@email.com" className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-emerald-500/20 focus:ring-0 transition-all outline-none font-semibold text-slate-800" onChange={e => setEmail(e.target.value)} required />
+              </div>
+            </div>
+
+            {/* Input Password */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Password</label>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-4 text-slate-300 group-focus-within:text-emerald-500 transition-colors" size={18} />
+                <input type="password" placeholder="Minimal 6 karakter" className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl py-4 pl-12 pr-4 text-sm focus:bg-white focus:border-emerald-500/20 focus:ring-0 transition-all outline-none font-semibold text-slate-800" onChange={e => setPassword(e.target.value)} required />
+              </div>
+            </div>
+
+            <button type="submit" disabled={loading} className="w-full bg-slate-950 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-emerald-600 transition-all active:scale-[0.98] shadow-2xl shadow-slate-200 mt-4">
+              {loading ? "Creating Account..." : "Sign Up Now"} <ArrowRight size={16} />
+            </button>
+          </form>
+
+          <p className="mt-10 text-center text-sm text-slate-500 font-medium">
+            Udah punya akun? <Link href="/login" className="text-emerald-600 font-black hover:underline">Balik Login</Link>
+          </p>
         </div>
-
-        {/* Input NIS */}
-        <div>
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">NIS (Nomor Induk Siswa)</label>
-          <input type="text" inputMode="numeric" required maxLength={5} value={nis} onChange={(e) => setNis(e.target.value.replace(/[^0-9]/g, ''))} placeholder="Contoh: 18477" className="w-full mt-2 bg-gray-50 border-2 border-gray-100 rounded-2xl py-3.5 px-5 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all font-bold text-gray-700"/>
-        </div>
-
-        {/* Input PIN */}
-        <div>
-          <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 ml-1">Bikin PIN (Samain kaya NIS)</label>
-          <input type="password" inputMode="numeric" required maxLength={5} value={pin} onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, ''))} placeholder="Ketik ulang NIS lu" className="w-full mt-2 bg-gray-50 border-2 border-gray-100 rounded-2xl py-3.5 px-5 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-100 transition-all font-bold text-gray-700 font-mono tracking-widest"/>
-        </div>
-
-        {/* Tombol Submit dengan efek Loading */}
-        <button type="submit" disabled={isLoading} className="w-full bg-green-600 text-white py-4 rounded-[20px] font-black uppercase tracking-widest shadow-xl shadow-green-100 active:scale-[0.98] transition-all mt-6 disabled:opacity-50 disabled:cursor-not-allowed">
-          {isLoading ? "Lagi Bikin Akun..." : "Daftar Sekarang"}
-        </button>
-      </form>
-
-      <div className="mt-8 text-center pb-8">
-        <p className="text-xs text-gray-400 font-bold">Udah punya akun? <a href="/login" className="text-green-600 cursor-pointer hover:underline">Masuk di sini</a></p>
       </div>
     </div>
   );
