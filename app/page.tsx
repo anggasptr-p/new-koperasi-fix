@@ -274,6 +274,62 @@ export default function HomePage() {
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
+      // Tambahin state ini di HomePage
+const [activeOrder, setActiveOrder] = useState<any>(null);
+
+// Tambahin useEffect buat nge-track orderan yang statusnya WAITING
+useEffect(() => {
+  const trackActiveOrder = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Ambil orderan terakhir yang masih WAITING
+    const { data } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("order_status", "WAITING")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (data) setActiveOrder(data);
+  };
+  trackActiveOrder();
+
+  // REALTIME NOTIF: Kalo status berubah, langsung update UI
+  const subscription = supabase
+    .channel('order-status-change')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, payload => {
+      if (activeOrder && payload.new.id === activeOrder.id) {
+        if (payload.new.order_status !== 'WAITING') {
+          // Kalo status udah ACCEPTED/REJECTED, munculin alert/toast
+          alert(`Update Order: Pesanan lu ${payload.new.order_status}!`);
+          setActiveOrder(null); // Ilangin banner Gojek
+        }
+      }
+    })
+    .subscribe();
+
+  return () => { supabase.removeChannel(subscription); };
+}, [activeOrder]);
+
+// Render Banner (Taruh di atas Bottom Nav)
+{activeOrder && (
+  <div onClick={() => router.push(`/payment/${activeOrder.id}`)} className="fixed bottom-24 left-5 right-5 bg-emerald-600 text-white p-4 rounded-2xl shadow-2xl flex items-center justify-between animate-bounce-subtle z-[80] cursor-pointer">
+    <div className="flex items-center gap-3">
+      <div className="bg-white/20 p-2 rounded-lg">
+        <Clock size={18} className="animate-spin-slow" />
+      </div>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Pesanan Diproses</p>
+        <p className="text-xs font-bold">Liat status pembayaran & antrean</p>
+      </div>
+    </div>
+    <ArrowRight size={18} />
+  </div>
+)}
+
     </div>
   );
 }
